@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>교내 e스포츠 대회</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,"Noto Sans KR",sans-serif;background:#f5f5f5;color:#222}
+.container{max-width:700px;margin:40px auto;background:#fff;padding:30px;border-radius:16px;box-shadow:0 5px 20px rgba(0,0,0,.08)}
+h1{text-align:center;margin-bottom:30px}
+h2{margin-top:30px}
+.game-buttons{display:flex;gap:10px}
+.game-buttons button{flex:1;padding:15px;border:1px solid #ddd;background:#fff;border-radius:10px;cursor:pointer;font-size:16px}
+.game-buttons button.selected{background:#222;color:#fff}
+#rules{height:250px;overflow-y:scroll;border:1px solid #ddd;padding:20px;margin-top:15px;border-radius:10px;line-height:1.7;background:#fafafa}
+button{font-size:15px}
+.main-button{width:100%;margin-top:15px;padding:15px;border:0;border-radius:10px;background:#ddd;color:#888;cursor:not-allowed}
+.main-button.active{background:#222;color:#fff;cursor:pointer}
+.hidden{display:none}
+.player-card{border:1px solid #ddd;border-radius:12px;padding:18px;margin-top:15px}
+.player-card h3{margin-top:0}
+input,select{width:100%;padding:12px;margin-top:8px;margin-bottom:10px;border:1px solid #ccc;border-radius:8px;font-size:15px}
+.score{font-weight:bold;margin-top:5px}
+.total{text-align:center;font-size:22px;font-weight:bold;margin-top:25px}
+.warning{text-align:center;font-weight:bold;margin-top:10px}
+.success{color:green}
+.fail{color:red}
+.submit-button{width:100%;padding:15px;margin-top:20px;border:0;border-radius:10px;background:#222;color:#fff;cursor:pointer;font-size:16px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>교내 e스포츠 대회</h1>
+
+<h2>1. 종목 선택</h2>
+<div class="game-buttons">
+<button type="button" onclick="selectGame('LoL',this)">League of Legends</button>
+<button type="button" onclick="selectGame('VALORANT',this)">VALORANT</button>
+</div>
+
+<div id="ruleSection" class="hidden">
+<h2>2. 대회 규칙</h2>
+<div id="rules" onscroll="checkScroll()">
+<div id="lolRules">
+<h3>League of Legends</h3>
+1. 5인 1팀으로 참가한다.<br>
+2. 소환사의 협곡 5v5로 진행한다.<br>
+3. 기본 Bo1으로 진행한다.<br>
+4. 밴픽은 운영진 지정 방식으로 진행한다.<br>
+5. 밴픽 시간 미준수 시 운영진 판단에 따른다.<br>
+6. 밴픽 완료 후 임의 변경은 금지한다.<br>
+7. 고의 탈주 및 경기 포기를 금지한다.<br>
+8. 핵, 매크로 및 비인가 프로그램 사용을 금지한다.<br>
+9. 버그를 고의로 악용하는 행위를 금지한다.<br>
+10. 문제 발생 시 즉시 운영진에게 알린다.<br>
+11. 서버 오류 및 심각한 문제 발생 시 재경기 여부는 운영진이 결정한다.<br>
+12. 모든 최종 판정은 운영진의 결정에 따른다.<br>
+</div>
+
+<div id="valorantRules" class="hidden">
+<h3>VALORANT</h3>
+1. 5인 1팀으로 참가한다.<br>
+2. 5v5로 진행한다.<br>
+3. 기본 Bo1으로 진행한다.<br>
+4. 맵은 운영진 지정 또는 추첨으로 결정한다.<br>
+5. 경기 시작 전 요원을 선택하며, 선택 후 임의 변경은 금지한다.<br>
+6. 게임 설정은 운영진이 지정한다.<br>
+7. 고의 탈주 및 경기 포기를 금지한다.<br>
+8. 핵, 매크로 및 비인가 프로그램 사용을 금지한다.<br>
+9. 버그를 고의로 악용하는 행위를 금지한다.<br>
+10. 문제 발생 시 즉시 운영진에게 알린다.<br>
+11. 서버 오류 및 심각한 문제 발생 시 재경기 여부는 운영진이 결정한다.<br>
+12. 모든 최종 판정은 운영진의 결정에 따른다.<br>
+</div>
+<br>
+<b>※ 위 규칙을 끝까지 확인한 후 아래 버튼을 눌러주세요.</b>
+</div>
+
+<button id="tierButton" class="main-button" disabled type="button" onclick="showTier()">규칙을 끝까지 읽어주세요</button>
+</div>
+
+<div id="tierSection" class="hidden">
+<h2>3. 팀 티어 점수 확인</h2>
+<p>각 팀원의 현재 티어와 최고 티어를 선택하면 개인 점수가 자동으로 계산됩니다.</p>
+<div id="players"></div>
+<div class="total">팀 총점: <span id="totalScore">0</span>점</div>
+<div id="tierMessage" class="warning"></div>
+</div>
+
+<div id="applicationSection" class="hidden">
+<h2>4. 참가 신청서</h2>
+<form id="applicationForm">
+<label>대표자 이름</label>
+<input type="text" id="leader" required>
+
+<label>학년</label>
+<select id="grade" required>
+<option value="">선택</option>
+<option value="1학년">1학년</option>
+<option value="2학년">2학년</option>
+<option value="3학년">3학년</option>
+</select>
+
+<label>반</label>
+<input type="number" id="classNumber" min="1" required>
+
+<label>팀명</label>
+<input type="text" id="teamName" required>
+
+<button type="submit" class="submit-button">참가 신청하기</button>
+</form>
+</div>
+</div>
+
+<script>
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxmzEl_-A4GCGSBRRdeJnOCj1NLJddHc7p5wsjZ66ks662qJNqFBZt7x2SNpd_SEQ9R/exec";
+
+let selectedGame="";
+let players=[];
+
+const tierScores={
+  LoL:{
+    current:{아이언:1,브론즈:2,실버:3,골드:5,플래티넘:7,에메랄드:9,다이아몬드:12,마스터:16,그랜드마스터:21,챌린저:27},
+    peak:{아이언:0,브론즈:1,실버:2,골드:3,플래티넘:4,에메랄드:6,다이아몬드:8,마스터:11,그랜드마스터:15,챌린저:20}
+  },
+  VALORANT:{
+    current:{아이언:1,브론즈:2,실버:3,골드:5,플래티넘:7,다이아몬드:10,초월자:14,불멸:19,레디언트:25},
+    peak:{아이언:0,브론즈:1,실버:2,골드:3,플래티넘:4,다이아몬드:6,초월자:9,불멸:13,레디언트:18}
+  }
+};
+
+function selectGame(game,button){
+  selectedGame=game;
+  document.querySelectorAll(".game-buttons button").forEach(btn=>btn.classList.remove("selected"));
+  button.classList.add("selected");
+
+  document.getElementById("ruleSection").classList.remove("hidden");
+  document.getElementById("tierSection").classList.add("hidden");
+  document.getElementById("applicationSection").classList.add("hidden");
+
+  document.getElementById("lolRules").classList.toggle("hidden",game!=="LoL");
+  document.getElementById("valorantRules").classList.toggle("hidden",game!=="VALORANT");
+
+  const rules=document.getElementById("rules");
+  rules.scrollTop=0;
+
+  const buttonTier=document.getElementById("tierButton");
+  buttonTier.disabled=true;
+  buttonTier.classList.remove("active");
+  buttonTier.textContent="규칙을 끝까지 읽어주세요";
+}
+
+function checkScroll(){
+  const rules=document.getElementById("rules");
+  if(rules.scrollTop+rules.clientHeight>=rules.scrollHeight-5){
+    const button=document.getElementById("tierButton");
+    button.disabled=false;
+    button.classList.add("active");
+    button.textContent="티어 점수 확인하기";
+  }
+}
+
+function showTier(){
+  document.getElementById("tierSection").classList.remove("hidden");
+  createPlayers();
+  document.getElementById("tierSection").scrollIntoView({behavior:"smooth"});
+}
+
+function createPlayers(){
+  const container=document.getElementById("players");
+  container.innerHTML="";
+  players=[];
+  const tiers=Object.keys(tierScores[selectedGame].current);
+
+  for(let i=0;i<5;i++){
+    const card=document.createElement("div");
+    card.className="player-card";
+
+    const title=document.createElement("h3");
+    title.textContent=`팀원 ${i+1}`;
+    card.appendChild(title);
+
+    const nameLabel=document.createElement("label");
+    nameLabel.textContent="이름";
+    card.appendChild(nameLabel);
+
+    const name=document.createElement("input");
+    name.type="text";
+    name.id=`player${i}`;
+    name.placeholder="이름 입력";
+    name.addEventListener("input",calculate);
+    card.appendChild(name);
+
+    const currentLabel=document.createElement("label");
+    currentLabel.textContent="현재 티어";
+    card.appendChild(currentLabel);
+
+    const current=document.createElement("select");
+    current.id=`current${i}`;
+    current.addEventListener("change",calculate);
+    addTierOptions(current,tiers);
+    card.appendChild(current);
+
+    const peakLabel=document.createElement("label");
+    peakLabel.textContent="최고 티어";
+    card.appendChild(peakLabel);
+
+    const peak=document.createElement("select");
+    peak.id=`peak${i}`;
+    peak.addEventListener("change",calculate);
+    addTierOptions(peak,tiers);
+    card.appendChild(peak);
+
+    const score=document.createElement("div");
+    score.className="score";
+    score.innerHTML='개인 점수: <span id="score'+i+'">0</span>점';
+    card.appendChild(score);
+
+    container.appendChild(card);
+  }
+}
+
+function addTierOptions(select,tiers){
+  const first=document.createElement("option");
+  first.value="";
+  first.textContent="선택";
+  select.appendChild(first);
+
+  tiers.forEach(tier=>{
+    const option=document.createElement("option");
+    option.value=tier;
+    option.textContent=tier;
+    select.appendChild(option);
+  });
+}
+
+function calculate(){
+  let total=0;
+  players=[];
+
+  for(let i=0;i<5;i++){
+    const name=document.getElementById(`player${i}`).value.trim();
+    const current=document.getElementById(`current${i}`).value;
+    const peak=document.getElementById(`peak${i}`).value;
+
+    let score=0;
+    if(current) score+=tierScores[selectedGame].current[current];
+    if(peak) score+=tierScores[selectedGame].peak[peak];
+
+    document.getElementById(`score${i}`).textContent=score;
+    total+=score;
+    players.push({name,score});
+  }
+
+  document.getElementById("totalScore").textContent=total;
+
+  const message=document.getElementById("tierMessage");
+  const application=document.getElementById("applicationSection");
+
+  if(total>35){
+    message.textContent="팀 총점이 35점을 초과하여 참가할 수 없습니다.";
+    message.className="warning fail";
+    application.classList.add("hidden");
+    return;
+  }
+
+  const allComplete=players.every(player=>player.name!=="");
+  const allTierSelected=players.every((player,i)=>
+    document.getElementById(`current${i}`).value!=="" &&
+    document.getElementById(`peak${i}`).value!==""
+  );
+
+  if(total>0 && allComplete && allTierSelected){
+    message.textContent="참가 가능한 팀입니다! 아래에서 참가 신청서를 작성하세요.";
+    message.className="warning success";
+    application.classList.remove("hidden");
+  }else{
+    message.textContent="";
+    message.className="warning";
+    application.classList.add("hidden");
+  }
+}
+
+document.getElementById("applicationForm").addEventListener("submit",function(e){
+  e.preventDefault();
+
+  const total=Number(document.getElementById("totalScore").textContent);
+  if(total>35){
+    alert("팀 총점이 35점을 초과했습니다.");
+    return;
+  }
+
+  const data={
+    game:selectedGame,
+    leader:document.getElementById("leader").value,
+    grade:document.getElementById("grade").value,
+    classNumber:document.getElementById("classNumber").value,
+    teamName:document.getElementById("teamName").value,
+    player1:players[0].name,score1:players[0].score,
+    player2:players[1].name,score2:players[1].score,
+    player3:players[2].name,score3:players[2].score,
+    player4:players[3].name,score4:players[3].score,
+    player5:players[4].name,score5:players[4].score,
+    totalScore:total
+  };
+
+  fetch(SCRIPT_URL,{
+    method:"POST",
+    mode:"no-cors",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(data)
+  });
+
+  alert("참가 신청이 완료되었습니다!");
+  this.reset();
+});
+</script>
+</body>
+</html>
