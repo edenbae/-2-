@@ -258,8 +258,9 @@ function calculate(){
   const message=document.getElementById("tierMessage");
   const application=document.getElementById("applicationSection");
 
-  if(total>35){
-    message.textContent="팀 총점이 35점을 초과하여 참가할 수 없습니다.";
+  if (total > 55) {
+  message.textContent =
+    "팀 총점이 55점을 초과하여 참가할 수 없습니다.";
     message.className="warning fail";
     application.classList.add("hidden");
     return;
@@ -286,8 +287,10 @@ document.getElementById("applicationForm").addEventListener("submit",function(e)
   e.preventDefault();
 
   const total=Number(document.getElementById("totalScore").textContent);
-  if(total>35){
-    alert("팀 총점이 35점을 초과했습니다.");
+if (total > 55) {
+  alert("팀 총점이 55점을 초과했습니다.");
+  return;
+}
     return;
   }
 
